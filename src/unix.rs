@@ -39,6 +39,17 @@ const MAP_STACK: libc::c_int = libc::MAP_STACK;
               target_os = "android")))]
 const MAP_STACK: libc::c_int = 0;
 
+#[cfg(all(target_os = "linux", target_arch="arm"))]
+use self::libc::mmap64 as mmap;
+#[cfg(all(target_os = "linux", target_arch="arm"))]
+use self::libc::off64_t as off_t;
+
+#[cfg(not(all(target_os = "linux", target_arch="arm")))]
+use self::libc::mmap as mmap;
+#[cfg(not(all(target_os = "linux", target_arch="arm")))]
+use self::libc::off_t as off_t;
+
+
 impl MmapOptions {
     fn as_flag(self) -> libc::c_int {
         let mut flag = 0;
@@ -54,10 +65,10 @@ pub struct MmapInner {
 
 impl MmapInner {
 
-    pub fn open(file: &File, prot: Protection, offset: usize, len: usize) -> io::Result<MmapInner> {
-        let alignment = offset % page_size();
+    pub fn open(file: &File, prot: Protection, offset: off_t, len: usize) -> io::Result<MmapInner> {
+        let alignment = offset % page_size() as off_t;
         let aligned_offset = offset - alignment;
-        let aligned_len = len + alignment;
+        let aligned_len = len + alignment as usize;
         if aligned_len == 0 {
             // Normally the OS would catch this, but it segfaults under QEMU.
             return Err(io::Error::new(io::ErrorKind::InvalidInput,
@@ -65,7 +76,7 @@ impl MmapInner {
         }
 
         unsafe {
-            let ptr = libc::mmap(ptr::null_mut(),
+            let ptr = mmap(ptr::null_mut(),
                                  aligned_len as libc::size_t,
                                  prot.as_prot(),
                                  prot.as_flag(),

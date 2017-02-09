@@ -128,7 +128,7 @@ impl Mmap {
     /// length must be greater than zero.
     pub fn open_with_offset(file: &File,
                             prot: Protection,
-                            offset: usize,
+                            offset: i64,
                             len: usize) -> Result<Mmap> {
         MmapInner::open(file, prot, offset, len).map(|inner| Mmap { inner: inner })
     }
