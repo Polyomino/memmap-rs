@@ -81,7 +81,7 @@ impl MmapInner {
                                  prot.as_prot(),
                                  prot.as_flag(),
                                  file.as_raw_fd(),
-                                 aligned_offset as libc::off_t);
+                                 aligned_offset as off_t);
 
             if ptr == libc::MAP_FAILED {
                 Err(io::Error::last_os_error())
